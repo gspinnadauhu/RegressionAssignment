@@ -1,0 +1,7 @@
+---
+title: "Regression Models Course Project - Cars & MPG"
+author: "gspinnadauhu"
+date: "April 14, 2017"
+output: pdf_document
+---
+
