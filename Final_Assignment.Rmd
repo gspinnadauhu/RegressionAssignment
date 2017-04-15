@@ -8,9 +8,40 @@ output: pdf_document
 ##### Executive Summary
 
 ##### Data
+This analysis is using the 'mtcars' dataset native to R.
+Loading and examining the structure of the data:
+```{r}
+data("mtcars")
+head(mtcars)
+str(mtcars)
+summary(mtcars)
+```
+This dataset has 32 observations and 11 variables.
 
-##### Method
+There are no missing observations.
+```{r}
+sum(is.na(mtcars))
+```
+##### Questions
+###### 1.“Is an automatic or manual transmission better for MPG”
+First, plotting MPG by transmission (am: 0=auto, 1=manual)
+```{r}
+library(ggplot2)
+ggplot(data=mtcars,aes(y=mpg,x=factor(am)))+
+        geom_boxplot()+
+        theme_classic()+
+        labs(title="MPG by Transmission type",
+             x="Transmission Type",
+             y="Miles per Gallon")
+```
+It appears that manual transmission gets better mileage average overall, as the median falls above the upper quartile range of data for automatic transmission mpg.
 
-##### Results
+Next, exploring the relationship between mpg and am, using a simple linear model.
+```{r}
+mpg_linear<-lm(mpg~am,mtcars)
+summary(mpg_linear)
+```
+
+###### 2."Quantify the MPG difference between automatic and manual transmissions"
 
 ##### Conclusion
