@@ -36,11 +36,75 @@ ggplot(data=mtcars,aes(y=mpg,x=factor(am)))+
 ```
 It appears that manual transmission gets better mileage average overall, as the median falls above the upper quartile range of data for automatic transmission mpg.
 
-Next, exploring the relationship between mpg and am, using a simple linear model.
+Next, exploring the relationship between mpg (dependent variable) and am, using a simple linear model.
+In order to avoid missing variable bias, other variables will be included. To avoid having too much multicollinearity, we are first looking at a correllation matrix between variables in mtcars (excluding mpg). Visualizing the correllations magnitudes in a correllation plot.
 ```{r}
-mpg_linear<-lm(mpg~am,mtcars)
+cormatrix<-cor(mtcars[,-1])
+library(corrplot)
+corrplot(cormatrix,type="upper",order="hclust",tl.col="black",tl.srt=45)
+```
+Based on the above graphic, the following variables appear to be fairly highly correllated:
+- #carburetors and horsepower (+)
+    The more carburettors a vehicle has, the more fuel it can get to the engine and therefor it likely has higher horsepower.
+- #carburetors and 1/4mile time (-)
+    If a vehicle has a higher number of carbs, then it is probably larger and will not be able to do a fast 1/4mi.
+- weight and cylinders (+)
+    The heavier the vehicle, the likely larger motor it has to propel it, larger motors likely have more cylinders.
+- weight and displacement (+)
+    The heavier the vehicle, the likely larger motor it has to propel it, hence a higher displacement.
+- weight and rear-axle ratio (-)
+    Unexpected, I would have thought a higher weight would tend to be matched with a high rear axle ratio to help accelleration.
+- weight and transmission type (-)
+    It appears that heavier vehicles tend to be more correllated with automatic transmissions.
+- horsepower and cylinders (+)
+    Higher horsepower likely results from larger engines featuring more cylinders.
+- horsepower and displacement (+)
+    Higher horsepower likely results from larger engines
+- horsepower and 1/4mile time (-)
+    Surprising, but if higher horsepower vehicles tend to be trucks, then they are larger and would not be able to get as quick of a 1/4mi time.
+- horsepower and V/S (-)
+    Not sure what V/S stands for, so cannot comment.
+- cylinders and displacement (+)
+    More cylinders means a larger engine, so more displacement
+- cylinders and V/S (-)
+    Not sure what V/S stands for, so cannot comment.
+- cylinders and rear axle ratio (-)
+    It appears that higher number of cylinders are correllated with lower real axle ratios.
+- displacement and V/S (-)
+    Not sure what V/S stands for, so cannot comment.    
+- displacement and rear axle ratio (-)
+    It appears that higher displacement is correllated with lower rear axle ratios, similar to higher cylinders and rear axle ratios.
+- 1/4time and V/S (+)
+    Not sure what V/S stands for, so cannot comment.  
+- rear axle ratio and transmission type (+)
+    It appears that larger real axle ratios are correllated with manual transmissions
+- rear axle ratio and number of fwd gears (+)
+    Larger rear axle ratios are correllated with larger numbers of gears
+- transmission type and number of fwd gears(+)
+    Manual transmissions are correllated to more forward gears. This makes sense, many automatic transmission cars have 3-4 gears while manual will usually have 5+.
+
+At risk of having some missing variable bias, due to the many high cross correllations, we are only including horsepower, weight and transmission type. Our logic is that horsepower and weight had the most higher correllations with other variables. We may have to exclude weight, if we find that its high correllation with transmission type is causing multicollinearity.
+
+The set of variables to be included in the linear model are the following:
+y  mpg: miles per gallon (continuous)
+x1 hp: horsepower (continuous)
+x2 wt: weight in 1000lbs (continuous)
+x2 am: Transmission type (0=automatic, 1=manual) (discrete)
+
+```{r}
+mpg_linear<-lm(mpg~hp+wt+factor(am),mtcars)
 summary(mpg_linear)
 ```
+The above results appear to be highly significant, with a large F-statistic and an adj R-sq of 0.8227.
+The signs of the variable coefficients make sense - larger horse power and weight would decrease vehicle mpg. Both variables are highly significant with p-values < 0.05.
+Based on above results, holding all else equal, a 1hp increase would decrease mpg by 0.04 miles and a 1000lbs increase in weight would lower mpg by 2.87 miles.
+The coefficient for transmission type is not significant, so we cannot interpret its sign or magnitude. This result is somewhat surprising.
+
+Next, using variance inflation test to assess level of multicollinearity.
+```{r}
+
+```
+
 
 ###### 2."Quantify the MPG difference between automatic and manual transmissions"
 
