@@ -65,14 +65,15 @@ x6 am: Transmission type (0=automatic, 1=manual) (discrete)
 mpg_linear<-lm(mpg~factor(cyl)+disp+hp+drat+wt+factor(am),mtcars)
 summary(mpg_linear)
 ```
+There seem to be some problems with this model, the adj R-sq suggests this model explains ~83% of variability, yet only hp's and wt's coefficients are significant at p<0.05.
+The signs of the hp and wt coefficients are correct and suggest that, holding all else equal, for each 1hp increase, mpg drops by 0.03miles and for each 1000lb increase in weight, mpg drops by -2.72miles. So, i.e. a 10-ton vehicle, holding all else equal, would on average get 32.6-2.73*(10)=5.3miles per gallon.
 
-
-Next, using sqrt of the variance inflations to see how much larger the standard error is due to inclusion of the variables.
+Next, using variance inflation factors to see how addition of variables is inflating variance.
 ```{r}
 library(car)
-sqrt(vif(mpg_linear))
+vif(mpg_linear)
 ```
-Weight has a somewhat sd inflation factor, which was partially expected due to the high correllation with transmission type.
+Weight has a somewhat elevated inflation factor, but displacement and cyl have very high factors as expected, as large engine displacement almost always comes from higher numbers of cylinders in passenger cars. wt is also fairly high as larger displacement engines also tend to weigh more, contributing to overall vehicle weight.
 
 Next, looking at a residual plot.
 ```{r}
