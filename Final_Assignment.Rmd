@@ -22,8 +22,7 @@ There are no missing observations.
 ```{r}
 sum(is.na(mtcars))
 ```
-##### Questions
-###### 1.“Is an automatic or manual transmission better for MPG”
+#### Analysis
 First, plotting MPG by transmission (am: 0=auto, 1=manual)
 ```{r}
 library(ggplot2)
@@ -109,8 +108,32 @@ ncvTest(mpg_lm.rest)
 ```
 Based on the p-value of 0.114, we fail to reject the H0, stating that error variance is constant for the model.
 
-Now to see if the functional form for our model is correct, we use Ramsey's RESET test to check for model misspecification. 
+Now to see if the functional form for our model is correct, we use Ramsey's RESET test to check for model misspecification.
+The test uses H0: coefficients for non-linear combinations of mpg (explanatory variable) are zero Ha: at least one of the coefficients is not zero.
+```{r}
+library(lmtest)
+resettest(mpg_lm.rest)
+```
+Based on the p-value of 0.022, we reject the H0 and conclude there that at least one of the coefficients for the non-linear combinations of mpg was not zero.
 
+Setting up a log-linear model, by regressing log(mpg) onto the regressors.
+```{r}
+mpg_loglin<-lm(log(mpg)~hp+drat+wt+factor(am),mtcars)
+summary(mpg_loglin)
+```
+In terms of results, coefficients for hp and wt continue to be significant with the expected signs. Transmission type continues to be not significiant and its coefficient can therefor not be interpreted.
+
+Now, re-testing the log-linear model using a RESET test, with H0: coefficients for non-linear combinations of mpg (explanatory variable) are zero Ha: at least one of the coefficients is not zero.
+```{r}
+library(lmtest)
+resettest(mpg_loglin)
+```
+Based on the RESET test's p-value of 0.0547, we fail to reject the H0 and conclude that none of the coefficients for the non-linear combinations of mpg were different from zero.
+
+**The log-linear model is probably a fairly sound model to estimate mpg for these data. It must be noted that the coefficient for transmission type was never significant in any of the iterations of the model. We conclude that weight and horsepower play a greater role in determining mpg than transmission type. Excluding all other variables, we did however see that cars with manual transmissions appear to get better gas mileage.**
+
+##### Questions
+###### 1.“Is an automatic or manual transmission better for MPG”
 ###### 2."Quantify the MPG difference between automatic and manual transmissions"
 
 ##### Conclusion
