@@ -13,16 +13,16 @@ While, when looking at mpg solely by transmission type, manual transmissions app
 ###### 1. “Is an automatic or manual transmission better for MPG”
 Based on Figure 1 in the appendix, it would appear that cars with manual transmission get overall higher miles per gallon. However, once other variables are included, we cannot find a statistical significant relationship between transmission type and gas mileage.
 
+
 ###### 2. "Quantify the MPG difference between automatic and manual transmissions"
-
-##### Conclusion
-
+Since the transmission type coefficient in our models was not statistically significant, we cannot/must not interpret its value.
+Comparing the means of cars with manual and with automatic transmission, we are able to see that they are statistically different from each other, but this relationship does not hold once confounding variables like, hp and weight, are introduced.
 
 ##### Appendix: Exploratory Data Analysis
 This analysis is using the 'mtcars' dataset native to R.
 Loading and examining the structure of the data:
 
-```{r}
+```{r results='hide'}
 data("mtcars")
 head(mtcars)
 str(mtcars)
@@ -32,7 +32,7 @@ This dataset has 32 observations and 11 variables.
 
 There are no missing observations.
 
-```{r}
+```{r results='hide'}
 sum(is.na(mtcars))
 ```
 #### Appendix: Model Development
@@ -50,42 +50,46 @@ ggplot(data=mtcars,aes(y=mpg,x=factor(am)))+
 ```
 It appears that manual transmission gets better mileage average overall, as the median falls above the upper quartile range of data for automatic transmission mpg.
 
-Next, exploring the relationship between mpg (dependent variable) and am, using a simple linear model.
-Let us first look at correllations between mpg and the other variables.
+We next test the differences in mean mpg for the transmission types with the following hypotheses.
+H0: There is not difference in means of mpg
+Ha: Mean MPG for Manual transmissions is less than for automatic transmission.
 
 ```{r}
 library(pander)
-pander(cor(mtcars)[,1],
+pander(with(mtcars,t.test(mpg[am==0],
+                          mpg[am==1],
+                          alternative="less",
+                          paired=FALSE,
+                          conf.level = 0.95)),
+       caption = "T-Test Comparing Mean MPG for Manual and Automatic Transmission")
+```
+
+Based on the p-value of 0.0007, we reject the H0, and conclude that the mean mpg for manual transmission cars is less than for automatic cars.
+
+Next, exploring the relationship between mpg (dependent variable) and am, using a simple linear model.
+Let us first look at correllations between mpg and the other variables.
+
+```{r results='hide'}
+library(pander)
+pander(cor(mtcars),
       caption="Correllation Coefficients with MPG")
 ```
 
 It appears here that mpg is highly correllated with #cylinders, engine displacement, horsepower, weight and to a lesser extent rear axle ratio.
 These variables will be included, in addition to am, in the regression. Note that am (transmission) is not that highly correllated with mpg.
 
-To avoid having too much multicollinearity, we now look at a correllation matrix between the chosen variables. Visualizing the correllations magnitudes in a correllation plot.
-
-```{r}
-library(corrplot)
-corrplot(cor(mtcars[,-c(7,8,10,11)]),
-         mar = c(1.5,0,1.5,0),
-         tl.col="black",
-         tl.srt=45,
-         cl.pos = "r",
-         type="lower",
-         title="Figure 2: Correlation Matrix for MTCars without MPG")
-```
-
-Based on the above graphic, cyl, wt and disp are highly correllated between the other variables. This could lead to some multicollinearity when running the regression. We will make the determination if some of these should be excluded based on variance inflation factors.
+We also find that cyl, wt and disp are highly correllated between the other variables. This could lead to some multicollinearity when running the regression. We will make the determination if some of these should be excluded based on variance inflation factors.
 It may also be useful to utilize interaction variables, i.e. hp/wt, which is a commonly used statistic for cars, usually called the "power to weight ratio".
 
 The set of variables to be included in the linear model are the following:
-- y  mpg: miles per gallon (continuous)
-- x1 cyl: number of cylinders (discrete)
-- x2 disp: engine displacement (continuous)
-- x3 hp: horsepower (continuous)
-- x4 drat: real axle ratio (continuous)
-- x5 wt: weight in 1000lbs (continuous)
-- x6 am: Transmission type (0=automatic, 1=manual) (discrete)
+
+* y mpg: miles per gallon (continuous)
+* x1 cyl: number of cylinders (discrete)
+* x2 disp: engine displacement (continuous)
+* x3 hp: horsepower (continuous)
+* x4 drat: real axle ratio (continuous)
+* x5 wt: weight in 1000lbs (continuous)
+* x6 am: Transmission type (0=automatic, 1=manual) (discrete)
 
 ```{r}
 library(pander)
