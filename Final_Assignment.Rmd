@@ -13,14 +13,11 @@ While, when looking at mpg solely by transmission type, manual transmissions app
 ###### 1. “Is an automatic or manual transmission better for MPG”
 Based on Figure 1 in the appendix, it would appear that cars with manual transmission get overall higher miles per gallon. However, once other variables are included, we cannot find a statistical significant relationship between transmission type and gas mileage.
 
-
-
 ###### 2. "Quantify the MPG difference between automatic and manual transmissions"
 Since the transmission type coefficient in our models was not statistically significant, we cannot/must not interpret its value.
 Comparing the means of cars with manual and with automatic transmission, we are able to see that they are statistically different from each other, but this relationship does not hold once confounding variables like, hp and weight, are introduced.
 
-##### Appendix: Exploratory Data Analysis
-This analysis is using the 'mtcars' dataset native to R.
+#### Appendix: Model Development
 Loading and examining the structure of the data:
 
 ```{r results='hide'}
@@ -29,25 +26,18 @@ head(mtcars)
 str(mtcars)
 summary(mtcars)
 ```
-This dataset has 32 observations and 11 variables.
 
-There are no missing observations.
-
-```{r results='hide'}
-sum(is.na(mtcars))
-```
-#### Appendix: Model Development
 First, plotting MPG by transmission (am: 0=auto, 1=manual)
 
-```{r warning=FALSE, fig.height=4,fig.width=5}
+```{r warning=FALSE, fig.height=2.5,fig.width=3.8}
 library(ggplot2)
 ggplot(data=mtcars,aes(y=mpg,x=factor(am)))+
         geom_boxplot()+
         theme_classic()+
         scale_x_discrete(labels=c("Automatic","Manual"))+
         labs(title="Figure 1: MPG by Transmission type",
-             x="Transmission Type",
-             y="Miles per Gallon")
+             y="Miles per Gallon",
+             x="")
 ```
 
 It appears that manual transmission gets better mileage average overall, as the median falls above the upper quartile range of data for automatic transmission mpg.
@@ -66,10 +56,8 @@ pander(with(mtcars,t.test(mpg[am==0],
        caption = "T-Test Comparing Mean MPG for Manual and Automatic Transmission")
 ```
 
-Based on the p-value of 0.0007, we reject the H0, and conclude that the mean mpg for manual transmission cars is less than for automatic cars.
-
-Next, exploring the relationship between mpg (dependent variable) and am, using a simple linear model.
-Let us first look at correllations between mpg and the other variables.
+Based on the p-value of 0.0007, we reject the H0.
+Next, exploring the relationship between mpg (dependent variable) and am, using a correllation matrix.
 
 ```{r results='hide'}
 library(pander)
@@ -79,18 +67,17 @@ pander(cor(mtcars),
 
 It appears here that mpg is highly correllated with #cylinders, engine displacement, horsepower, weight and to a lesser extent rear axle ratio.
 These variables will be included, in addition to am, in the regression. Note that am (transmission) is not that highly correllated with mpg.
-
 The following model was set up to start the analysis:
 
 ```{r warning=FALSE}
 library(pander)
 mpg_linear<-lm(mpg~factor(cyl)+disp+hp+drat+wt+factor(am),mtcars)
-pander(mpg_linear,
+pander(summary(mpg_linear),
        digits = 4,
        caption="Regression Output - Linear Model")
 ```
 
-There seem to be some problems with this model, the adj R-sq suggests this model explains ~83% of variability, yet only hp's and wt's coefficients are significant at p<0.05.
+The adj R-sq suggests this model explains ~83% of variability, yet only hp's and wt's coefficients are significant at p<0.05.
 Next, using variance inflation factors to see how addition of variables is inflating variance.
 
 ```{r warning=FALSE}
@@ -100,8 +87,7 @@ pander(vif(mpg_linear),
        caption = "Variance Inflation Factors - Linear Model")
 ```
 
-Weight has a somewhat elevated inflation factor, but displacement and cyl have very high factors as expected, as large engine displacement almost always comes from higher numbers of cylinders in passenger cars.
-
+Displacement and cyl have very high factors as expected, as large engine displacement almost always comes from higher numbers of cylinders.
 Since neither disp nor cyl had statistically significants coefficients, we will run a partial F-test to see if these can be excluded.
 The partial F-test will be comparing an unrestricted model (mpg_linear) and the restricted model (mpg_linear less cyl and disp).
 H0: Coefficients for both cyl and disp are zero.
@@ -115,13 +101,7 @@ pander(anova(mpg_lm.rest,mpg_linear),
 ```
 
 Based on the p-value of 0.258, we fail to reject the null hypothesis. We therefore continue our analysis with the restricted model.
-Looking at the model summary and variance inflation factors for the restricted model.
-
-```{r warning=FALSE}
-library(pander)
-pander(mpg_lm.rest,
-       caption="Regression Output - Restricted Linear Model")
-```
+Looking at the variance inflation factors for the restricted model.
 
 ```{r warning=FALSE}
 library(pander)
@@ -130,12 +110,10 @@ pander(vif(mpg_lm.rest),
        caption="Variance Inflation Factors - Restricted Linear Model")
 ```
 
-In the restricted model, the adjusted R-sq is roughly the same as in the unrestricted model. Coefficients for hp and wt are now highly significant at p=0.05.
 Based on the variance inflation factors, we can assume that there is only low-level of multicollinearity, as all factors are below 4.
-
 Next, looking at a residual plot to see if there is heteroskedasticity or non-linearity in the model.
 
-```{r warning=FALSE, message=FALSE, fig.height=4,fig.width=5}
+```{r warning=FALSE, message=FALSE, fig.height=2.5,fig.width=3.8}
 library(ggplot2)
 ggplot(data=mpg_lm.rest$model,aes(x=mpg_lm.rest$fitted.values,y=mpg_lm.rest$residuals))+
         geom_point()+
@@ -148,19 +126,17 @@ ggplot(data=mpg_lm.rest$model,aes(x=mpg_lm.rest$fitted.values,y=mpg_lm.rest$resi
 There is potentially some non-linearity, but there is not a very clear pattern in this plot.
 Testing for heteroskedasticity via the Breusch-Pagan Test, with H0: Constant error variance and Ha: Error variance changes with level of fitted values.
 
-```{r warning=FALSE}
+```{r warning=FALSE,results='hide'}
 library(car)
 library(pander)
-pander(ncvTest(mpg_lm.rest),
-       caption="Breusch-Pagan Test - Restricted Linear Model")
+ncvTest(mpg_lm.rest)
 ```
 
-Based on the p-value of 0.114, we fail to reject the H0, stating that error variance is constant for the model.
-
+Based on the p-value of 0.114, we fail to reject the H0.
 Now to see if the functional form for our model is appropriate, we use Ramsey's RESET test to check for model misspecification.
 The test uses H0: coefficients for non-linear combinations of mpg (explanatory variable) are zero Ha: at least one of the coefficients is not zero.
 
-```{r warning=FALSE, message=FALSE}
+```{r warning=FALSE,message=FALSE}
 require(zoo)
 library(lmtest)
 library(pander)
@@ -174,6 +150,7 @@ Setting up a log-linear model, by regressing log(mpg) onto the regressors and re
 ```{r warning=FALSE}
 library(lmtest)
 library(pander)
+mpg_loglin<-lm(log(mpg)~hp+drat+wt+factor(am),mtcars)
 pander(resettest(mpg_loglin),
        caption = "RESET Test - Log-Linear Model")
 ```
@@ -183,9 +160,7 @@ Below is a summary of our final model.
 
 ```{r warning=FALSE}
 library(pander)
-mpg_loglin<-lm(log(mpg)~hp+drat+wt+factor(am),mtcars)
-
-pander(mpg_loglin,
+pander(summary(mpg_loglin),
        caption = "Regression Output - Log-Linear Model")
 ```
 
